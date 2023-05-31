@@ -1,1 +1,1 @@
-# Churn_Prediction_model
+# Churn Prediction model
