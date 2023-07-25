@@ -39,7 +39,7 @@ sc = StandardScaler()
 X_train=sc.fit_transform(X_train)
 X_test=sc.fit_transform(X_test)
 
-"""Training model """
+"""Hyperparameter tuning"""
 
 import keras
 from keras import layers
@@ -47,6 +47,35 @@ from keras import callbacks
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Dropout
+from keras.wrappers.scikit_learn import KerasClassifier
+from sklearn.model_selection import GridSearchCV
+
+def create_model(layers,activation):
+    model= keras.Sequential()
+    for i, nodes in enumerate(layers):
+        if i==0:
+            model.add(Dense(nodes,input_shape=X_train.shape[0]))
+            model.add(Activation(activation))
+            model.add(Dropout(0.3))
+        else:
+            model.add(Dense(nodes))
+            model.add(Activation(activation))
+            model.add(Dropout(0.3))
+        model.add(Dense(units=1,kernel_initializer='glorot_uniform',activation='sigmoid'))
+    return model
+
+test_model=KerasClassifier(build_fn=create_model,verbose=0)
+
+layers =[[300],[256,256,128,256],[128,128,128,128],[256,256,256,256],[300,256,128]]
+activations =['sigmoid','relu']
+
+param_grid = dict(layers=layers,activation=activations,batch_size=[128,256],epochs=300)
+grid=GridSearchCV(estimator=test_model,param_grid=param_grid,cv=5)
+grid_result=grid.fit(X_train,X_test)
+print(grid_result.best_score_,grid_result.best_params_)
+
+
+"""Training model """
 
 model = keras.Sequential([layers.Dense(300,input_shape=[10],activation='relu',kernel_initializer='he_normal'),
                           layers.Dropout(rate=0.3),
